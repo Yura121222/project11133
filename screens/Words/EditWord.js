@@ -4,8 +4,10 @@ import {
   TextInput,
   Text,
   Pressable,
+  Image,
 } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import * as ImagePicker from "expo-image-picker";
 import { playSound } from "../../services/soundHandler";
 import { useState, useMemo } from "react";
 import { useSelector, useDispatch } from "react-redux";
@@ -13,15 +15,39 @@ import { wordsLearningActions } from "../../store/wordsLearningSlice";
 
 function EditWord({ route, navigation }) {
   const [wordData, setWordData] = useState(() => route.params.wordData);
+  const [mediaLibraryPermission, requestMediaLibraryPermission] =
+    ImagePicker.useMediaLibraryPermissions();
   const colors = useSelector((state) => state.theme.colors);
   const styles = useMemo(() => getStyles(colors), [colors]);
   const dispatch = useDispatch();
 
+  async function onPickImage() {
+    if (mediaLibraryPermission?.status !== ImagePicker.PermissionStatus.GRANTED) {
+      const permissionResult = await requestMediaLibraryPermission();
+      if (!permissionResult.granted) {
+        return;
+      }
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.5,
+    });
+
+    if (result.canceled || result.cancelled) {
+      return;
+    }
+
+    const selectedImageUri = result.assets?.[0]?.uri;
+    if (selectedImageUri) {
+      setWordData((prevData) => ({ ...prevData, image: selectedImageUri }));
+    }
+  }
+
   function onSave() {
     dispatch(wordsLearningActions.updateWord(wordData));
-    navigation.navigate(
-      "AllWords"
-    );
+    navigation.navigate("AllWords");
   }
 
   function onChangeWordData(text, propName) {
@@ -31,6 +57,13 @@ function EditWord({ route, navigation }) {
   return (
     <>
       <View style={styles.receivedInfoContainer}>
+        <Pressable style={styles.imagePressable} onPress={onPickImage}>
+          {wordData.image ? (
+            <Image source={{ uri: wordData.image }} style={styles.image} />
+          ) : (
+            <Text style={styles.imagePlaceholder}>No image taken yet.</Text>
+          )}
+        </Pressable>
         <View style={{ flexDirection: "row", alignItems: "baseline" }}>
           <Text style={styles.word}>{wordData.word}</Text>
           {wordData.audio && (
@@ -144,6 +177,27 @@ function getStyles(colors) {
       alignItems: "center",
       justifyContent: "center",
       zIndex: 10,
+    },
+    imagePressable: {
+      marginVertical: 8,
+      height: 140,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: colors.primary200,
+      backgroundColor: colors.fontInverse,
+      alignItems: "center",
+      justifyContent: "center",
+      overflow: "hidden",
+    },
+    image: {
+      width: "100%",
+      height: "100%",
+      resizeMode: "cover",
+    },
+    imagePlaceholder: {
+      fontSize: 18,
+      color: colors.grey600,
+      textAlign: "center",
     },
     playPressable: {
       marginHorizontal: 20,

@@ -35,6 +35,12 @@ function Item({ item }) {
           />
         </View>
       </Pressable>
+      <Image
+        style={styles.wordImage}
+        source={
+          item.image ? { uri: item.image } : require("../assets/no-image.png")
+        }
+      />
       <Pressable
         style={styles.textContainer}
         onPress={() => navigation.navigate("EditWord", { wordData: item })}
@@ -93,9 +99,12 @@ function getStyles(colors) {
       paddingLeft: 10,
       paddingBottom: 5,
     },
-    image: {
+    wordImage: {
       width: 60,
-      aspectRatio: 1,
+      height: 60,
+      borderRadius: 8,
+      marginRight: 8,
+      resizeMode: "cover",
     },
   });
 }

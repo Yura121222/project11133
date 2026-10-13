@@ -17,6 +17,14 @@ function WordCard({ wordInfo, setNext }) {
         style={styles.wordContainer}
         onPress={() => setShowFullInfo(true)}
       >
+        <Image
+          style={styles.image}
+          source={
+            wordInfo.image
+              ? { uri: wordInfo.image }
+              : require("../assets/no-image.png")
+          }
+        />
         <Text style={styles.word}>{wordInfo.word}</Text>
         {showFullInfo && (
           <>
